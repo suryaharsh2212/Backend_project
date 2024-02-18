@@ -1,0 +1,15 @@
+{
+  "name": "backend-file-structuring",
+  "version": "1.0.0",
+  "description": "backend devlopment",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js"
+  },
+  "author": "surya",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}
