@@ -14,7 +14,7 @@ connect_db()
         console.log(`app listening on port: ${process.env.PORT}`);
     })
 })
-.then((err)=>{
+.catch((err)=>{
     console.log("mongo conncetion faild",err);
 })
 
