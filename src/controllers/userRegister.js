@@ -1,4 +1,3 @@
-// import asyncHandler from "../utility/asyncHandler.js" 
 import { uploadOncloudinary } from "../utility/cloudinary.js"
 import apiresponse from "../utility/apiresponse.js"
 import { ApiError } from "../utility/apierror.js"
@@ -65,7 +64,8 @@ const login=asyncHandler( async (req, res) => {
               res.status(202).json({
                   message: "Login successfully",
                   user: {
-                      userid,
+                      userid:userid,
+                      email:user.email
                   },
               });
           } else {
