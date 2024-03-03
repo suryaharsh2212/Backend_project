@@ -1,4 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary'
+import fs from "fs"
+import { ApiError } from './apierror.js';
 
           
 cloudinary.config({ 
@@ -8,11 +10,23 @@ cloudinary.config({
 });
 
 const uploadOncloudinary=async (localfilepath)=>{
-   const response=await cloudinary.uploader.upload(localfilepath);
+
+  try {
+    const response=await cloudinary.uploader.upload(localfilepath);
    if(!response)
    {
     console.log("error in uploaing");
+    throw new ApiError(209,"error in uploading")
    }
+   fs.unlinkSync(localfilepath);
    return response;
+    
+  } catch (error) {
+    fs.unlinkSync(localfilepath)
+    console.log(error);
+    return null
+    
+  }
+   
 }
 export {uploadOncloudinary}
