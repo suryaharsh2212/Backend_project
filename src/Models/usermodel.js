@@ -36,19 +36,11 @@ userschema.pre("save",async function (next){  //its a middleware used just befor
     
 })
 
-// userschema.methods.ispasswordcorrect=async function(password){
-//     console.log("Provided Password:", password);
-//     console.log("Stored Password:", this.password);
-//     return await bcrypt.compare(password,this.password)
-// }
 userschema.methods.ispasswordcorrect = async function (password) {
     if (!this.password || !password) {
       console.error("Password or stored password is undefined/null");
       return false;
     }
-  
-    console.log("Provided Password:", password);
-    console.log("Stored Password:", this.password);
   
     return await bcrypt.compare(password, this.password);
   };
@@ -62,7 +54,7 @@ userschema.methods.generateaccessToken= function(){
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn:ACCESS_TOKEN_EXPIRY
+            expiresIn:process.env.ACCESS_TOKEN_EXPIRY
         }
     )
      
@@ -76,7 +68,7 @@ userschema.methods.generaterefreshToken= function(){
         process.env.REFRESH_TOKEN_SECRET,
         {
 
-           expiresIn:REFRESH_TOKEN_EXPIRY
+           expiresIn:process.env.REFRESH_TOKEN_EXPIRY
         }
     )
      
