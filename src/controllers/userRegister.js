@@ -4,6 +4,8 @@ import { ApiError } from "../utility/apierror.js"
 import {User} from "../Models/usermodel.js"
 import ApiResponse from "../utility/apiresponse.js"
 import asyncHandler from "../utility/asyncHandler.js"
+// import { verify } from "jsonwebtoken" 
+import jwt from "jsonwebtoken"
 
 
 const generateaccessandrefreshtoken=async(userID)=>{
@@ -46,6 +48,7 @@ const registeruser=asyncHandler(async (req,res)=>{
       throw new ApiResponse(209, {userid,email}, "User with userid or email already exists");
       
     }
+    
    
       const responseofcoludinary=await uploadOncloudinary(req.files[0].path)
       console.log("Image uploaded on cloudinary",responseofcoludinary.url)
@@ -59,10 +62,10 @@ const registeruser=asyncHandler(async (req,res)=>{
     User.create({
       userid,
       password,
-      profile:responseofcoludinary.url,
+     profile:responseofcoludinary.url, 
       email
     })
-      return responseofcoludinary
+      // return responseofcoludinary 
     
 
     
@@ -133,10 +136,83 @@ const logoutuser=asyncHandler(async(req,res)=>{
     )
 })
 
+const Updaterefreshtoken=asyncHandler(async(req,res)=>{
+     const Incominrefreshtoken=req.cookies.refreshtoken
+     if(!Incominrefreshtoken)
+     {
+      res.status(400).json({
+        message:"Unauthorized request"
+      })
+     }
+      
+     const decodedToken=jwt.verify(Incominrefreshtoken,process.env.REFRESH_TOKEN_SECRET)
+ 
+     const IncominUser=await User.findById(decodedToken._id)
+     const newToken=await generateaccessandrefreshtoken(IncominUser._id)
+     
+     const newAccessToken=newToken.accessToken
+     const newRefreshToken=newToken.refreshToken
+    
+
+     IncominUser.token=newToken.refreshToken
+     await IncominUser.save({validateBeforeSave:false})
+     const options={
+      httpOnly:true,
+      secure:true
+    }
+
+     res.status(200).
+     cookie("accesstoken",newAccessToken,options)
+      .cookie("refreshtoken",newRefreshToken,options)
+      .json({
+        message:"token refreshed sucessfully",
+        newTokens:{
+          Access:newAccessToken,
+          Refresh:newRefreshToken
+        }
+
+
+      })
+
+
+     
+     
+})
+const Updatepassword=asyncHandler(async(req,res)=>{
+      const prev=req.body.previouspassword
+      const newpass=req.body.newpassword
+      const Checkpassword=await req.user.ispasswordcorrect(prev)
+      if(!(prev && newpass))
+      {
+        res.status(401).json({
+          message:"please enter the required fields"
+        })
+      }
+      console.log(Checkpassword);
+      if(!Checkpassword)
+      {
+        res.status(401).json({
+          message:"previous password is incorrect"
+        }) 
+      }
+       if (Checkpassword) {
+          const changes=await User.findById(req.user._id)
+          changes.password=newpass
+          changes.save()
+          res.status(200).json({
+            message:"password updated sucessfully"
+          })
+       }
+
+
+})
 
 
 export {login,
  logoutuser,
+ Updaterefreshtoken,
+  Updatepassword,
+ 
 
 registeruser
 }

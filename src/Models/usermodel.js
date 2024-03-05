@@ -21,7 +21,7 @@ const userschema =new mongoose.Schema({
     profile:
     {
         type:String,
-        required:true
+       
     },
     token:{
         type:String
@@ -32,11 +32,14 @@ const userschema =new mongoose.Schema({
 userschema.pre("save",async function (next){  //its a middleware used just before saving the the passwod to encrpt the password
      if(!this.isModified("password")) return next() ;
      this.password= await bcrypt.hash(this.password,8)
+     console.log("running");
 
     
 })
 
 userschema.methods.ispasswordcorrect = async function (password) {
+    // console.log(this.password); 
+    // console.log(password); 
     if (!this.password || !password) {
       console.error("Password or stored password is undefined/null");
       return false;
