@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {Updatepassword, Updaterefreshtoken, registeruser} from "../controllers/userRegister.js";
+import {Updatepassword, Updaterefreshtoken, displaydata, registeruser} from "../controllers/userRegister.js";
 import {login} from "../controllers/userRegister.js"; 
 import { upload } from "../middlewares/multerFileupload.js";
 import { logoutuser } from "../controllers/userRegister.js";
@@ -12,6 +12,7 @@ router.route("/login").post(login)
 router.route("/logout").post(verifyJWT,logoutuser)
 router.route("/refreshaccessToken").post(verifyJWT, Updaterefreshtoken)
 router.route("/updatepassword").post(verifyJWT,Updatepassword)
+router.route("/displaydata").post(verifyJWT,displaydata)
 
 
 

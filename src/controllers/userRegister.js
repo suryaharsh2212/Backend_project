@@ -6,6 +6,8 @@ import ApiResponse from "../utility/apiresponse.js"
 import asyncHandler from "../utility/asyncHandler.js"
 // import { verify } from "jsonwebtoken" 
 import jwt from "jsonwebtoken"
+import cookie from "cookie"
+import { serialize } from "cookie"
 
 
 const generateaccessandrefreshtoken=async(userID)=>{
@@ -75,6 +77,7 @@ const login=asyncHandler( async (req, res) => {
   const { userid, password } = req.body;
   try {
       const user = await User.findOne({$or:[{userid}]});
+      console.log(user);
 
       if (user) {
           
@@ -84,23 +87,31 @@ const login=asyncHandler( async (req, res) => {
             const {accessToken,refreshToken}=await generateaccessandrefreshtoken(user._id)
             const options={
               httpOnly:true,
-              secure:true
+              secure:true,
+              domain: 'localhost',
+              path: '/',
+            
             }
-             return res.status(202)
-             .cookie("accesstoken",accessToken,options)
-             .cookie("refreshtoken",refreshToken,options)
-             .json({
-                  message: "Login successfully",
-                  user: {
-                      userid:userid,
-                      email:user.email,
-                      accessToken,
-                      refreshToken
-                      
-                  },
-              });
+            
+
+            const accessTokenCookie = serialize('accesstoken', accessToken, options);
+                const refreshTokenCookie = serialize('refreshtoken', refreshToken, options);
+
+                res.status(200)
+                    .set('Set-Cookie', [accessTokenCookie, refreshTokenCookie])
+                    .json({
+                        message: "Login successfully",
+                        user: {
+                            userid: user.userid,
+                            email: user.email,
+                            accessToken: accessToken,
+                            refreshToken: refreshToken,
+                        },
+                    });
+
+
           } else {
-              res.status(202).json({
+              res.status(401).json({
                   message: "Invalid userid or password",
               });
               throw new ApiError(202, "", "Invalid details");
@@ -125,15 +136,18 @@ const logoutuser=asyncHandler(async(req,res)=>{
 
      const options={
       httpOnly:true,
-      secure:true
+      secure:true, 
+      domain: 'localhost',
+      path: '/',
     }
-    return res
+     res
     .status(200)
     .clearCookie("accesstoken",options)
     .clearCookie("refreshtoken",options)
     .json(
       new ApiResponse(200,{},"Logged out successfully")
     )
+  
 })
 
 const Updaterefreshtoken=asyncHandler(async(req,res)=>{
@@ -156,10 +170,12 @@ const Updaterefreshtoken=asyncHandler(async(req,res)=>{
 
      IncominUser.token=newToken.refreshToken
      await IncominUser.save({validateBeforeSave:false})
-     const options={
-      httpOnly:true,
-      secure:true
-    }
+     const options = {
+      
+      secure: true, 
+      httpOnly: true,
+      
+    };
 
      res.status(200).
      cookie("accesstoken",newAccessToken,options)
@@ -206,12 +222,34 @@ const Updatepassword=asyncHandler(async(req,res)=>{
 
 
 })
+const displaydata=asyncHandler(async(req,res)=>{
+  const Incominrefreshtoken=req.cookies.refreshtoken
+  if(!Incominrefreshtoken)
+  {
+   res.status(400).json({
+     message:"Unauthorized request"
+   })
+  }
+  const decoded=jwt.verify(Incominrefreshtoken,process.env.REFRESH_TOKEN_SECRET)
+  const IncominUser=await User.findById(decoded._id)
+  console.log(IncominUser);
+  res.status(200).json({
+    email:IncominUser.email,
+    avatar:IncominUser.profile,
+    username:IncominUser.userid
+    
+
+  })
+
+
+})
 
 
 export {login,
  logoutuser,
  Updaterefreshtoken,
   Updatepassword,
+  displaydata,
  
 
 registeruser
